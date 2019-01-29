@@ -1,4 +1,4 @@
-(defproject io.simplect/functional		"0.1"
+(defproject io.simplect/functional		"0.3"
   :description					"Library to aid functional programming"
   :license	{:name				"Copyright (c) 2017-2019 Klaus Harbo. All rights reserved."
                  :contact			"Klaus Harbo"
