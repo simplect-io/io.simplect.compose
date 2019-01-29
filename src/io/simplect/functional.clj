@@ -3,6 +3,7 @@
    [cats.core					:as cats]
    [clojure.algo.generic.functor		:as functor]
    [clojure.spec.alpha				:as s]
+   [clojure.spec.test.alpha			:as t]
    ))
 
 (defn- build-sym [nm] (symbol (str (ns-name *ns*)) (name nm)))
