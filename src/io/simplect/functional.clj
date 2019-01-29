@@ -175,11 +175,6 @@
   "Like `clojure.core/comp` except applies `fs` in reverse order."
   (apply comp (reverse fs)))
 
-(def chain
-  "Like `clojure.core/comp` except applies `fs` in reverse
-  order. Deprecated.  Use `rcomp` instead."
-  rcomp)
-
 (def fmap
   "Same as `clojure.algo.generic.functor/fmap`."
   functor/fmap)
