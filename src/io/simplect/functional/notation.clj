@@ -1,49 +1,44 @@
 (ns io.simplect.functional.notation
   (:require
    [cats.core					:as cats]
+   [clojure.core				:as core]
    [io.simplect.functional			:as iof]))
 
-(defmacro λ
-  "Abbreviation for `clojure.core/fn`."
-  [& args]
-  `(fn ~@args))
+(defn- build-sym [nm] (symbol (str (ns-name *ns*)) (name nm)))
 
-(def Π
-  "Abbreviation for `clojure.core/partial`."			
-  partial)
+(defn- var-arglist-and-doc
+  [fvar]
+  (select-keys (meta fvar) [:arglists :doc]))
 
-(def π
-  "Abbreviation  for `com.harbo-enterprises.util.misc/partial>`."
-  iof/partial>)
+(defn- merge-meta
+  [target-var m]
+  (alter-meta! target-var (π merge m)))
 
-(def γ
-  "Abbreviation for `comp`."
-  comp)
+(defmacro fref
+  [nm fname]
+  `(let [m# (var-arglist-and-doc (var ~fname))]
+     (def ~nm ~fname)
+     (merge-meta (var ~nm) (update-in m# [:doc] #(str "\nAbbreviation for " '~fname "\n\n" %)))
+     '~nm))
 
-(def Γ
-  "Abbreviation for `rcomp` which is `clojure.core/comp` with arguments
-  in reverse order."
-  iof/rcomp)
+(alter-meta! #'fref #(assoc % :private true))
 
-(def μ
-  "Abbreviation for `map`."
-  map)
-
-(def μμ
-  "Abbreviation for `mapv`.")
-
-(def ρ
-  "Abbreviation for `clojure.core/reduce`."
-  reduce)
-
-(def conj-ρ
-  "Abbreviation for `com.harbo-enterprises.util.misc/conjreduce`."
-  iof/conjreduce)
-
-(def assoc-ρ
-  "Abbreviation for `com.harbo-enterprises.util.misc/assocreduce`"
-  iof/assocreduce)
+(fref Π	core/partial)
+(fref π		iof/partial>)
+(fref γ		core/comp)
+(fref Γ	iof/rcomp)
+(fref μ	core/map)
+(fref μμ	core/mapv)
+(fref ρ	core/reduce)
+(fref conj-ρ	iof/conjreduce)
+(fref assoc-ρ	iof/assocreduce)
 
 (defmacro Ξ
-  [& args ]
-  `(iof/curry ~@args))
+  [& args]
+  `(cats/curry ~@args))
+(merge-meta #'Ξ (var-arglist-and-doc #'cats/curry))
+
+(defmacro λ
+  [& args]
+  `(fn ~@args))
+(merge-meta #'λ (var-arglist-and-doc #'fn))
