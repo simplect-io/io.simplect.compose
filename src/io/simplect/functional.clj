@@ -200,10 +200,31 @@
   [& args]
   `(cats/curry ~@args))
 
+(sdefn reorder (s/cat :indices (s/coll-of (s/and int? (complement neg?)) :kind sequential?) :f fn?)
+  "Returns a function which calls `f` with arguments reordered according
+  to `v` which must be a sequential collection of integers all less than
+  the number of arguments.
+
+  Example:
+
+        user> (let [f (fn [& args] args)
+                    g (reorder [0 3 2 0] f)]
+                (g :a :b :c :d :e))
+        (:a :d :c :a)
+        user>"
+  [v f]
+  (fn [& args]
+    (let [mx (apply max v)]
+      (if (< mx (count args))
+        (apply f (map (partial nth args) v))
+        (throw (ex-info (str "reorder: " mx " arg index too large ")
+                 {:v v, :max-index mx, :args args}))))))
+
 (defmacro call
   "Call `f` with `v` as an argument.  Essentially a no-op because
   `(= (f v) (call f v))` will hold for all pure, total functions. Use
-  to accentuate the function call occurs in complex expressions."
+  to accentuate the function call occurs in complex expressions (and,
+  yes, this macro is indeed form over function since it has none)."
   [f v]
   `(~f ~v))
 
