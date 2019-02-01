@@ -12,7 +12,7 @@
 
 (defn- merge-meta
   [target-var m]
-  (alter-meta! target-var (π merge m)))
+  (alter-meta! target-var (iof/partial> merge m)))
 
 (defmacro fref
   [nm fname]
