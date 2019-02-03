@@ -6,11 +6,11 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns io.simplect.functional.notation
+(ns io.simplect.compose.notation
   (:require
    [cats.core					:as cats]
    [clojure.core				:as core]
-   [io.simplect.functional			:as iof]))
+   [io.simplect.compose				:as ioc]))
 
 (defn- var-arglist-and-doc
   [fvar]
@@ -18,7 +18,7 @@
 
 (defn- merge-meta
   [target-var m]
-  (alter-meta! target-var (iof/partial> merge m)))
+  (alter-meta! target-var (ioc/partial> merge m)))
 
 (defmacro fref
   [nm fname]
@@ -30,14 +30,14 @@
 (alter-meta! #'fref #(assoc % :private true))
 
 (fref Π	core/partial)
-(fref π		iof/partial>)
+(fref π		ioc/partial>)
 (fref γ		core/comp)
-(fref Γ	iof/rcomp)
+(fref Γ	ioc/rcomp)
 (fref μ	core/map)
 (fref μμ	core/mapv)
 (fref ρ	core/reduce)
-(fref conj-ρ	iof/conjreduce)
-(fref assoc-ρ	iof/assocreduce)
+(fref conj-ρ	ioc/conjreduce)
+(fref assoc-ρ	ioc/assocreduce)
 
 (defmacro Ξ
   [& args]
