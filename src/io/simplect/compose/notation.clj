@@ -10,24 +10,8 @@
   (:require
    [cats.core					:as cats]
    [clojure.core				:as core]
-   [io.simplect.compose				:as ioc]))
-
-(defn- var-arglist-and-doc
-  [fvar]
-  (select-keys (meta fvar) [:arglists :doc]))
-
-(defn- merge-meta
-  [target-var m]
-  (alter-meta! target-var (ioc/partial> merge m)))
-
-(defmacro fref
-  [nm fname]
-  `(let [m# (var-arglist-and-doc (var ~fname))]
-     (def ~nm ~fname)
-     (merge-meta (var ~nm) (update-in m# [:doc] #(str "\nAbbreviation for " '~fname "\n\n" %)))
-     '~nm))
-
-(alter-meta! #'fref #(assoc % :private true))
+   [io.simplect.compose				:as ioc]
+   [io.simplect.compose.util					:refer [fref var-arglist-and-doc merge-meta]]))
 
 (fref Π	core/partial)
 (fref π		ioc/partial>)

@@ -12,6 +12,8 @@
    [clojure.algo.generic.functor		:as functor]
    [clojure.spec.alpha				:as s]
    [clojure.spec.test.alpha			:as t]
+   ,,
+   [io.simplect.compose.util					:refer [fref]]
    ))
 
 (defn- build-sym [nm] (symbol (str (ns-name *ns*)) (name nm)))
@@ -48,7 +50,18 @@
   "Defines a function accepting a single value using `def` (instead of
   `defn`).  The resulting function is instrumented to be checked
   against `specpred` which must be a predicate function taking a
-  single argument."
+  single argument.
+
+  Example:
+
+        user> (fdef my-add-3 int? (fn [x] (+ x 3)))
+        user/my-add-3
+        user> (my-add-3 2)
+        5
+        user> (my-add-3 2.0)
+        Execution error - invalid arguments to io.simplect.compose/my-add-3 at (REPL:5).
+        2.0 - failed: int? at: [:G__8490]
+        user> "
   ([nm specpred docstring form]
    (fdef* nm specpred docstring form))
   ([nm specpred-or-docstring form]
@@ -77,18 +90,7 @@
   [[nm form]
    (fdef-* nm nil nil form)])
 
-(def ^:dynamic *instrument-defins*
-  "Instruments functions defined using `defin*` if evaluating this var
-  returns a truthy value, otherwise functions are `unstrument`ed.
-
-  If `*instrument-defins*` is bound to a function, evaluation is
-  performed by calling the function without arguments, otherwise the
-  result of evaluation is the value of `*instrument-defins*."
-  true)
-
 (defn- sdefn*
-  "Define instrumented function.  Like `clojure.core/defn` but
-  instruments function to be checked against `spec`."
   [nm docstring arglist spec body]
   (let [sym (build-sym nm)]
     `(do
@@ -97,12 +99,12 @@
          ~arglist
          ~@body)
        (s/fdef ~sym :args ~spec)
-       ~(if *instrument-defins*
-          `(t/instrument '~sym)
-          `(t/unstrument '~sym))
+       (t/instrument '~sym)
        '~sym)))
 
 (defmacro sdefn
+  "Define instrumented function.  Like `clojure.core/defn` but
+  instruments function to be checked against `spec`."
   [nm spec docstring arglist & body]
   (sdefn* nm docstring arglist spec body))
 
@@ -115,7 +117,7 @@
        '~sym)))
 
 (defmacro sdefn-
-  "Liks `defin` except defines a private function."
+  "Liks `sdefn` except defines a private function."
   ([nm spec docstring arglist & body]
    (sdefn-* nm docstring arglist spec body)))
 
@@ -183,9 +185,7 @@
   "Like `clojure.core/comp` except applies `fs` in reverse order."
   (apply comp (reverse fs)))
 
-(def fmap
-  "Same as `clojure.algo.generic.functor/fmap`."
-  functor/fmap)
+(fref fmap functor/fmap)
 
 (defn partial>
   "Like `partial` except it will insert the argument accepted by the
@@ -203,10 +203,6 @@
         user>"
   [& args]
   (apply partial >>-> args))
-
-(defmacro curry
-  [& args]
-  `(cats/curry ~@args))
 
 (sdefn reorder (s/cat :indices (s/coll-of (s/and int? (complement neg?)) :kind sequential?) :f fn?)
   "Returns a function which calls `f` with arguments reordered according
@@ -228,18 +224,62 @@
         (throw (ex-info (str "reorder: " mx " arg index too large ")
                  {:v v, :max-index mx, :args args}))))))
 
+(defmacro curry
+  "Same as `cats.core/curry` from the Funcool Cats library, its
+  docstring reproduced below for convenience.
+
+  Given either a fixed arity function or an arity and a function,
+  return another which is curried.
+
+  With inferred arity (function must have one fixed arity):
+
+      (defn add2 [x y] (+ x y))
+      (def cadd2 (curry add2))
+
+      ((cadd2 1) 3)
+      ;; => 4
+
+      (cadd2 1 3)
+      ;; => 4
+
+  With given arity:
+
+      (def c+ (curry 3 +))
+
+      ((c+ 1 2) 3)
+      ;; => 6
+
+      ((((c+) 1) 2) 3)
+      ;; => 6"
+  [& args]
+  `(cats/curry ~@args))
+
 (defmacro call
   "Call `f` with `v` as an argument.  Essentially a no-op because
   `(= (f v) (call f v))` will hold for all pure, total functions. Use
   to accentuate the function call occurs in complex expressions (and,
-  yes, this macro is indeed form over function since it has none)."
+  yes, this macro is indeed form over function since it has none).
+
+  Example:
+
+        user> (count [1 2])
+        2
+        user> (call count [1 2])
+        2
+        user>"
   [f v]
   `(~f ~v))
 
 (defmacro call-with
   "Call `f` with `v` as an argument.  Same as `call` with arguments
   switched.  Same purpose, to make clear where the function call
-  occurs in complex expressions."
+  occurs in complex expressions.
+
+  Example:
+
+        user> (call-with [1 2] count)
+        2
+        user>"
   [v f]
   `(~f ~v))
 
@@ -250,7 +290,7 @@
 
   Example:
 
-        navigate> (map (callee 11) [inc dec (partial * 10)])
+        user> (map (callee 11) [inc dec (partial * 10)])
         (12 10 110)"
   [v]
   (fn [f] (f v)))
@@ -268,8 +308,7 @@
         [1 2]
         user> (conjreduce {:incl? (comp odd? :b)} :a [{:a 1, :b 2} {:a 2, :b 1}])
         [2]
-        user>
-  "
+        user>"
   ([f coll]
    (conjreduce {} f coll))
   ([{:keys [incl? init] :or {init [], incl? (constantly true)}} f coll]
@@ -285,8 +324,6 @@
 
   Example:
 
-        user> 
-        
         user> (assocreduce (fn [[k v]] [k (:a v)])
                            {:one {:a 1, :b 2} :two {:a 2, :b 1}})
         {:one 1, :two 2}
@@ -294,8 +331,7 @@
                            (fn [[k v]] [k (:a v)])
                            {:one {:a 1, :b 2} :two {:a 2, :b 1}})
         {:two 2}
-        user>
-  "
+        user>"
   ([f coll]
    (assocreduce {} f coll))
   ([{:keys [init incl?] :or {init {}, incl? (constantly true)}} f coll]

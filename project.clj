@@ -1,5 +1,5 @@
 (defproject io.simplect/compose			"0.6"
-  :description					"Library to aid functional programming"
+  :description					"Clojure library to aid composing functions"
   :license	{:name				"Eclipse Public License"
                  :url				"http://www.eclipse.org/legal/epl-v10.html"
                  :contact			"Klaus Harbo"
