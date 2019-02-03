@@ -4,8 +4,6 @@
    [clojure.core				:as core]
    [io.simplect.functional			:as iof]))
 
-(defn- build-sym [nm] (symbol (str (ns-name *ns*)) (name nm)))
-
 (defn- var-arglist-and-doc
   [fvar]
   (select-keys (meta fvar) [:arglists :doc]))
