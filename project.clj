@@ -1,10 +1,10 @@
-(defproject io.simplect/functional		"0.5"
+(defproject io.simplect/compose			"0.6"
   :description					"Library to aid functional programming"
   :license	{:name				"Eclipse Public License"
                  :url				"http://www.eclipse.org/legal/epl-v10.html"
                  :contact			"Klaus Harbo"
                  :email				"klaus@harbo.net -and- kh@harbo-enterprises.com"}
-  :jar-name					"io.simplect.functional-%s.jar"
+  :jar-name					"io.simplect.compose-%s.jar"
   :target-path					"target/%s"
   :repositories					[["he-pub"  {:url "s3p://clojure.harbo-enterprises.com/public/releases/", :creds :gpg}]]
   :profiles					{:uberjar {:aot :all}}

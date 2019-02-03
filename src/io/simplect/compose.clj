@@ -6,7 +6,7 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns io.simplect.functional
+(ns io.simplect.compose
   (:require
    [cats.core					:as cats]
    [clojure.algo.generic.functor		:as functor]
