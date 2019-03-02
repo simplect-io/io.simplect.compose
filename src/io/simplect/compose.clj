@@ -33,16 +33,27 @@
   ([nm docstring form]
    (def-* nm docstring form)))
 
+(def ^:dynamic *instrument?* false)
+
+(defmacro without-instrumentation [& body]
+  `(binding [*instrument?* false]
+     (do ~@body)))
+
+(defmacro with-instrumentation [& body]
+  `(binding [*instrument?* true]
+     (do ~@body)))
 
 (defn- fdef*
   [nm specpred docstring form]
-  (let [sym (build-sym nm)]
+  (let [sym (build-sym nm)
+        M (meta nm)
+        instr? (if (find M :instrument) (get M :instrument) *instrument?*)]
     `(do ~(if docstring
             `(def ~nm ~docstring ~form)
             `(def ~nm ~form))
          ~(when specpred
             `(s/fdef ~nm :args (s/cat ~(keyword (name (gensym))) ~specpred)))
-         ~(when specpred
+         ~(when instr?
             `(t/instrument '~sym))
          '~sym)))
 
@@ -51,6 +62,12 @@
   `defn`).  The resulting function is instrumented to be checked
   against `specpred` which must be a predicate function taking a
   single argument.
+
+  `nm` will be instrumented iff (1) the form is embedded in
+  `with-instrumentation` (without an intervening
+  `without-instrumentation` form), (2) the dynamic var `*instrument?*`
+  is truthy, or (3) its metadata contains a truthy value for key
+  `:instrument`.
 
   Example:
 
@@ -92,19 +109,29 @@
 
 (defn- sdefn*
   [nm docstring arglist spec body]
-  (let [sym (build-sym nm)]
+  (let [sym (build-sym nm)
+        M (meta nm)
+        instr? (if (find M :instrument) (get M :instrument) *instrument?*)]
     `(do
        (defn ~nm
          ~@(when docstring [docstring])
          ~arglist
          ~@body)
        (s/fdef ~sym :args ~spec)
-       (t/instrument '~sym)
+       ~(when instr?
+          `(t/instrument '~sym))
        '~sym)))
 
 (defmacro sdefn
   "Define instrumented function.  Like `clojure.core/defn` but
-  instruments function to be checked against `spec`."
+  instruments function to be checked against `spec`.
+
+  `nm` will be instrumented iff (1) the form is embedded in
+  `with-instrumentation` (without an intervening
+  `without-instrumentation` form), (2) the dynamic var `*instrument?*`
+  is truthy, or (3) its metadata contains a truthy value for key
+  `:instrument`.
+"
   [nm spec docstring arglist & body]
   (sdefn* nm docstring arglist spec body))
 
