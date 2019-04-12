@@ -6,17 +6,17 @@ an abbreviation.
 The table below provides an overview of each abbreviated form (`core` refers to `clojure.core`,
 `compose` to `io.simplect.compose`):
 
-|--------------|--------------------|---------------------------|
-| Notation     | Abbreviates        | Intended mnemonic         |
-| γ            | `core/comp`        | 'c' (gamma) for *compose* |
-| Γ            | `compose/rcomp`    | 'C' (Gamma) for *compose* |
-| π            | `compose/partial1` | 'p' (pi) for *partial*    |
-| Π            | `core/partial`     | 'P' (Pi) for *partial*    |
-| χ            | `compose/curry`    | 'k' (chi) for *kurry*     |
-| λ            | `core/fn`          | 'lambda' for *lambda*     |
-| μ            | `core/map`         | 'm' (mu) for *map*        |
-| ρ            | `core/reduce`      | 'r' (rho) for *reduce*    |
-
+| Notation|Abbreviates|Intended mnemonic|
+|---|---|---|
+ | γ | core/comp | 'c' (gamma) for compose | 
+ | Γ | compose/rcomp | 'C' (Gamma) for compose | 
+ | π | compose/partial1 | 'p' (pi) for partial | 
+ | Π | core/partial | 'P' (Pi) for partial | 
+ | χ | compose/curry | 'k' (chi) for kurry | 
+ | λ | core/fn | 'lambda' for lambda | 
+ | μ | core/map | 'm' (mu) for map | 
+ | ρ | core/reduce | 'r' (rho) for reduce |
+ 
 Some people may prefer to not use these abbreviated forms, which require you (1) to remember the
 meaning of each and (2) may not be straightforward to enter on most keyboards.  
 
