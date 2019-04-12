@@ -7,7 +7,7 @@ The table below provides an overview of each abbreviated form (`core` refers to 
 `compose` to `io.simplect.compose`):
 
 |--------------|--------------------|---------------------------|
-| **Notation** | **Abbreviates**    | **Intended mnemonic**     |
+| Notation     | Abbreviates        | Intended mnemonic         |
 | γ            | `core/comp`        | 'c' (gamma) for *compose* |
 | Γ            | `compose/rcomp`    | 'C' (Gamma) for *compose* |
 | π            | `compose/partial1` | 'p' (pi) for *partial*    |
