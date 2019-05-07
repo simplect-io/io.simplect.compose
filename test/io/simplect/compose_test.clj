@@ -87,13 +87,13 @@
 
 (deftest test->->>
   (is (= [10 20 30 40] (-> (range)
-                           (>->> take 5)
-                           (>->> drop 1)
-                           (>->> mapv (partial * 10))))))
+                           ((>->> take) 5)
+                           ((>->> drop) 1)
+                           ((>->> mapv) (partial * 10))))))
 
 (deftest test->>->
   (is (= {:a 1, :b 3} (->> {:a 1}
-                           (>>-> assoc :b 3)))))
+                           ((>>-> assoc) :b 3)))))
 
 
 (let [fc (comp (partial * 10) (partial + 5))
@@ -102,8 +102,8 @@
     (is (= 100	(fc 5)))
     (is (= 55	(fr 5)))))
 
-(deftest test-partial1
-  (let [f (c/partial1 assoc :a 3)]
+(deftest test-raptial
+  (let [f (c/raptial assoc :a 3)]
     (is (= {:a 3, :b 9} (f {:b 9})))))
 
 (deftest test-reorder

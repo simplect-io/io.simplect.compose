@@ -7,23 +7,23 @@ to make composing functions of both styles together.
 
 ## `>>->`
 
-`>>->` reorders function arguments to make a function needing arguments at the start to fit into a
-context providing the arguments at the end:
+`>>->` reorders arguments to make a function needing arguments at the start to fit into a context
+providing the arguments at the end:
 
 ```
 user> (->> {:a 1, :b 2}
-           (>>-> assoc :c 9))
+           ((>>-> assoc) :c 9))
 {:a 1, :b 2, :c 9}
 ```
 
 ## `>->>`
 
-`>->>` reorders function arguments to make a function needing arguments at the start to fit into a
-context providing the argument first:
+`>->>` reorders arguments to make a function needing arguments at the start to fit into a context
+providing the argument first:
 
 ```
 user> (-> {:a 1, :b 2}
-          (>->> map str))
+          ((>->> map) str))
 ("[:a 1]" "[:b 2]")
 ```
 

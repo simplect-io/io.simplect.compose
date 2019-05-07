@@ -141,10 +141,12 @@
    (sdefn-* nm docstring arglist spec body)))
 
 (defn >->>
-  "Calls `f` with arguments reordered such that the first argument to `>->>` is given to `f` as the
-  last.  The name of the function is meant to suggest that `f` is converted to fit into a '->'
-  context by mapping argument order from `->`-style (missing arg inserted first) to
-  '->>'-style (missing arg inserted last).
+  "Returns a function which calls `f` with arguments reordered such that the first argument is given
+  to `f` as the last.
+
+  The name of the function is meant to suggest that `f` is converted to fit into a '->' context by
+  mapping argument order from `->`-style (missing arg inserted first) to '->>'-style (missing arg
+  inserted last).
 
   Can be called without arguments in which case a function reordering arguments is
   returned (cf. `ex3` in the example below).
@@ -153,29 +155,33 @@
 
         user> (-> {:a 1}
                   (assoc :b 9)
-                  (>->> map str))
+                  ((>->> map) str))
         (\"[:a 1]\" \"[:b 9]\")
-        user> (let [f (fn [& args] args)
-                    map> (>->> map)]
-                {:ex1 (>->> 1 f 2 3 4 5),
-                 :ex2 (-> (range 5)
-                          (>->> map (partial * 10)))
-                 :ex3 (-> (range 5)
-                          (map> (partial * 1000)))})
+        user>
+        (let [f (fn [& args] args)
+              map> (>->> map)]
+          {:ex1 ((>->> f) 1 2 3 4 5),
+           :ex2 (-> (range 5)
+                    ((>->> map) (partial * 10)))
+           :ex3 (-> (range 5)
+                    (map> (partial * 1000)))})
         {:ex1 (2 3 4 5 1),
          :ex2 (0 10 20 30 40),
          :ex3 (0 1000 2000 3000 4000)}
         user>"
-  ([v & f-and-args]
-   (let [f (first f-and-args), f-args (concat (rest f-and-args) [v])]
-     (apply f f-args)))
-  ([f]
-   (fn [& args] (apply f (concat (rest args) [(first args)])))))
+  [f]
+  (fn [& args]
+    (apply f (let [fst (first args)]
+               (if fst
+                 (concat (rest args) (list fst))
+                 '())))))
 
 (defn >>->
-  "Calls `f` with arguments reordered such that last argument to `>>->` is given to `f` as the
-  first. The name of the function is meant to suggest that `f` is converted to fit into a '->>'
-  context by mapping argument order from `->>`-style (arg last) to '->'-style (arg first).
+  "Returns a function which calls `f` with arguments reordered such that last argument is given to `f`
+  as the first.
+
+  The name of the function is meant to suggest that `f` is converted to fit into a '->>' context by
+  mapping argument order from `->>`-style (arg last) to '->'-style (arg first).
 
   Can be called without arguments in which case a function reordering arguments is
   returned (cf. `ex3` in the example below).
@@ -183,54 +189,56 @@
   Example:
 
        user> (->> {:a 1}
-                  (>>-> assoc :b 1))
-       {:a 1, :b 1} 
+                  ((>>-> assoc) :b 1))
+       {:a 1, :b 1}
        user> (let [f (fn [& args] args)
-                    assoc>> (>>-> assoc)]
-                {:ex1 (>>-> f 1 2 3 4 5),
-                 :ex2 (->> {:a 1}
-                           (>>-> assoc :b 2))
-                 :ex3 (->> {:a 1}
-                           (assoc>> :b 2))
-                 :ex4 ((partial >>-> assoc :b 2) {:a 1})})
-        {:ex1 (5 1 2 3 4),
-         :ex2 {:a 1, :b 2},
-         :ex3 {:a 1, :b 2}
-         :ex4 {:a 1, :b 2}}
+                   assoc>> (>>-> assoc)]
+               {:ex1 ((>>-> f) 1 2 3 4 5),
+                :ex2 (->> {:a 1}
+                          ((>>-> assoc) :b 2))
+                :ex3 (->> {:a 1}
+                         (assoc>> :b 2))})
+       {:ex1 (5 1 2 3 4),
+        :ex2 {:a 1, :b 2},
+        :ex3 {:a 1, :b 2}}
         user>"
-  ([f & args]
-   (let [f-args (list* (last args) (butlast args))]
-     (apply f f-args)))
-  ([f]
-   (fn [& args] (apply f (concat (list (last args)) (butlast args))))))
+  [f]
+  (fn [& args]
+    (apply f (let [lst (last args)]
+               (if lst
+                 (cons lst (butlast args))
+                 '())))))
 
 (defn rcomp
   "Compose `fs` in order.  Like [[clojure.core/comp]] except applies `fs` in the order they appear
-  (reverse order relative to [[comp]]). 
+  (reverse order relative to [[comp]]).
 
   `io.simplect.compose.notation` defines the short-hand notation [[Γ]] for [[rcomp]] and
   [[γ]] for [[clojure.core/comp]]."
   [& fs]
   (apply comp (reverse fs)))
 
-(defn partial1
+(defn raptial
   "Like `partial` except it will insert the argument accepted by the returned function between first
   and second elements of `args` (as opposed to [[partial]] which adds the argument after those given
   to it).
 
   Example:
   ```
-        user> {:ex1 ((partial1 assoc :x 2) {:a 1})
+        user> {:ex1 ((raptial assoc :x 2) {:a 1})
                :ex2 (->> [{:a 1} {:v -1}]
-                         (map (partial1 assoc :x 2)))}
+                         (map (raptial assoc :x 2)))}
         {:ex1 {:a 1, :x 2},
          :ex2 ({:a 1, :x 2} {:v -1, :x 2})}
         user>
   ```
-  `io.simplect.compose.notation` defines the short-hand notation `π` for `partial1` and `Π` for
+  `io.simplect.compose.notation` defines the short-hand notation `π` for `raptial` and `Π` for
   `clojure.core/partial`."
-  [& args]
-  (apply partial >>-> args))
+  [f & args1]
+  (fn [& args2]
+    (if-let [fst (first args2)]
+      (apply f (cons fst (concat args1 (rest args2))))
+      (apply f args1))))
 
 (sdefn reorder (s/cat :indices (s/coll-of (s/and int? (complement neg?)) :kind sequential?) :f fn?)
   "Returns a function which calls `f` with arguments reordered according to `v` which must be a
@@ -278,7 +286,7 @@
       ((((c+) 1) 2) 3)
       ;; => 6
 
-  `io.simplect.compose.notation` defines the short-hand notation `Ξ` for [[curry]]."
+  `io.simplect.compose.notation` defines the short-hand notation `Χ` for [[curry]]."
   [& args]
   `(cats/curry ~@args))
 

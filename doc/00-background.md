@@ -37,8 +37,8 @@ In many cases it is better to express functionalties directly, as functions. The
 
 ```
 (defn mult2 [v] (* v 2))
-(defn add3 [v] (+ v 3))
-(defn div4 [v] (/ v 4))
+(defn add3  [v] (+ v 3))
+(defn div4  [v] (/ v 4))
 ```
 
 are the trivial improvement on the original example, allowing us to do
@@ -78,7 +78,7 @@ which eliminate variations such as that between `mult2`/`add3` and `div4`. It al
 short-hand notation for some of the operators, allowing very succinct expression (at the price of
 having to remember the notation!).
 
-`compose` provides, for example, `partial1` which supplements `partial` by returning a function
+`compose` provides, for example, `raptial` which supplements `partial` by returning a function
 which a single value to the argument list before calling the wrapped function.
 
 This allows these more consistent definitions
@@ -86,18 +86,18 @@ This allows these more consistent definitions
 ```
 (def mult2 (partial * 2))
 (def add3  (partial + 3))
-(def div4  (partial1 / 4))
+(def div4  (raptial / 4))
 ```
 
 For succinctness, `compose` additionally provides the namespace `io.simplect.compose.notation` which
-adds short names (greek letters) for some the operators. Specifically, `notation` defines `Π` (aka
-`GREEK CAPITAL LETTER PI` in Unicode) to mean `partial` and `π` (`GREEK SMALL LETTER PI`) to mean
-`partial1`.  This allows the above definitions to be written equivalently as
+adds short names (greek letters) for some the operators. Specifically, `notation` defines `π` (aka
+`GREEK SMALL LETTER PI` in Unicode) to mean `partial` and `Π` (`GREEK CAPITAL LETTER PI`) to mean
+`raptial`.  This allows the above definitions to be written equivalently as
 
 ```
-(def mult2 (Π * 2))
-(def add3  (Π + 3))
-(def div4  (π / 4))
+(def mult2 (π * 2))
+(def add3  (π + 3))
+(def div4  (Π / 4))
 ```
 
 `notation` defines `Γ`  (`GREEK CAPITAL LETTER GAMMA`) to mean `rcomp` and `γ` to (`GREEK SMALL
@@ -116,7 +116,7 @@ or, equivalently and perhaps more intuitively, as
 or perhaps simply as
 
 ```
-(def op (Γ (Π * 2) (Π + 3) (π / 4)))
+(def op (Γ (π * 2) (π + 3) (Π / 4)))
 ```
 
 although this form lumps the individual operations back together but illustrates the succinctness of
@@ -128,19 +128,19 @@ expression easier to understand than using `comp` which applies them in reverse 
 To close off the example the definitions
 
 ```
-(def mult2 (π * 2))
-(def add3  (π + 3))
-(def div4  (π / 4))
+(def mult2 (Π * 2))
+(def add3  (Π + 3))
+(def div4  (Π / 4))
 
 (def op (Γ mult2 add3 div4))
 ```
 
 seem to strike an attractive balance, with clear code structure, the ability to test each part
 separately and retaining the possibility of reusing each constituent part. (The definitions of
-`mult2` and `add3` were adjusted to use `π` to eliminate arbitrary, unnecessary variation.) In this
+`mult2` and `add3` were adjusted to use `Π` to eliminate arbitrary, unnecessary variation.) In this
 case avoiding named arguments appears to help keep the code simple and easy to understand.
 
-`compose` strives to make it easier to program like this.
+`io.simplect.compose` strives to make it easier to program like this.
 
 ### PS
 

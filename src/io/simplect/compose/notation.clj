@@ -25,8 +25,8 @@
 (u/merge-meta #'λ (u/var-arglist-and-doc #'fn))
 (alter-meta! #'λ (fn [m] (update-in m [:doc] #(str "Abbreviated form of [[clojure.core/fn]].\n\n" %))))
 
-(u/fref Π clojure.core/partial)
-(u/fref π io.simplect.compose/partial1)
+(u/fref π clojure.core/partial)
+(u/fref Π io.simplect.compose/raptial)
 (u/fref γ clojure.core/comp)
 (u/fref Γ io.simplect.compose/rcomp)
 (u/fref μ clojure.core/map)

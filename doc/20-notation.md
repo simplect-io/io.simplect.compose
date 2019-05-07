@@ -10,8 +10,8 @@ The table below provides an overview of each abbreviated form (`core` refers to 
 |--------------|--------------------|---------------------------|
 | γ            | `core/comp`        | 'c' (gamma) for *compose* |
 | Γ            | `compose/rcomp`    | 'C' (Gamma) for *compose* |
-| π            | `compose/partial1` | 'p' (pi) for *partial*    |
-| Π            | `core/partial`     | 'P' (Pi) for *partial*    |
+| π            | `core/partial`     | 'p' (pi) for *partial*    |
+| Π            | `compose/raptial`  | 'P' (Pi) for *partial*    |
 | χ            | `compose/curry`    | 'k' (chi) for *kurry*     |
 | λ            | `core/fn`          | 'lambda' for *lambda*     |
 | μ            | `core/map`         | 'm' (mu) for *map*        |
