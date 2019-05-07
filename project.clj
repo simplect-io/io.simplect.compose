@@ -1,4 +1,4 @@
-(defproject io.simplect/compose			"0.7.21"
+(defproject io.simplect/compose			"0.7.22"
   :description					"Clojure library to aid composing functions"
   :license	{:name				"Eclipse Public License"
                  :url				"http://www.eclipse.org/legal/epl-v10.html"
