@@ -10,10 +10,11 @@
   (:require
    [cats.core					:as cats]
    [clojure.algo.generic.functor		:as functor]
+   [clojure.core				:as core]
    [clojure.spec.alpha				:as s]
    [clojure.spec.test.alpha			:as t]
    ,,
-   [io.simplect.compose.util					:refer [fref]]
+   [io.simplect.compose.util			:as u]
    ))
 
 (defn- build-sym
@@ -29,7 +30,7 @@
        '~nm))
 
 (defmacro def-
-  "Like [[clojure.core/def]] except `nm` is private to namespace."
+  "Like [[clojure.core/def]] except `nm` is private."
   ([nm form]
    (def-* nm nil form))
   ([nm docstring form]
@@ -46,17 +47,16 @@
             `(s/fdef ~nm :args ~(if (or (symbol? specpred-or-spec) (keyword? specpred-or-spec))
                                   `(s/cat ~(keyword (name (gensym))) ~specpred-or-spec)
                                   specpred-or-spec)))
-         (t/instrument '~sym)
          '~sym)))
 
 (defmacro fdef
-  "Defines a function accepting a single value using `def` (instead of `defn`).  The resulting
-  function which is instrumented to be checked against `specpred`.
+  "Defines a function with specification.  The resulting function is NOT instrumented.
 
   Example:
 
         user> (fdef my-add-3 int? (fn [x] (+ x 3)))
         user/my-add-3
+        user> (clojure.spec.test.alpha/instrument `my-add-3)
         user> (my-add-3 2)
         5
         user> (my-add-3 2.0)
@@ -103,20 +103,19 @@
                                    (keyword? spec))
                              `(s/cat ~(-> (gensym) name keyword) ~spec)
                              spec))
-       (t/instrument '~sym)
        '~sym)))
 
 (defmacro sdefn
-  "Define instrumented function.  Like [[clojure.core/defn]] but instruments function to be checked
-  against `spec`.
+  "Defines a functions like [[clojure.core/defn]] but adds specification `spec`. Note that the
+  function is NOT instrumented.
 
-  Example:
-  ```
+  Example: ```
     (sdefn add-to-int
       (s/cat :int int?)
       \"Add 2 to `v` which must be an integer.\"
       [v]
       (+ v 2))
+    (clojure.spec.alpha/instrument `add-to-int)
 
   user> (add-to-int 4)
   6
@@ -135,10 +134,21 @@
        '~sym)))
 
 (defmacro sdefn-
-  "Define instrumented private function.  Like [[clojure.core/defn]] but instruments private function
-  to be checked against `spec`.  See [[sdefn]] for example of use."
+  "Defines private function like [[clojure.core/defn]] but adds specification `spec`.
+  See [[sdefn]] for example of use.  Note that function is NOT instrumented."
   ([nm spec docstring arglist & body]
    (sdefn-* nm docstring arglist spec body)))
+
+(defmacro redefn
+  "Defines `name` to be `refname` and updates its meta-data keys `:arglists` and `:doc` to be those of
+  `refname` thereby enabling tools to show its argument lists and documentation.  Useful for
+  functions."
+  [name refname]
+  `(do (def ~name ~refname)
+       (alter-meta! (var ~name)
+                    #(merge % {:arglists (-> (var ~refname) meta :arglists)
+                               :doc (-> (var ~refname) meta :doc)}))
+       (var ~name)))
 
 (defn >->>
   "Returns a function which calls `f` with arguments reordered such that the first argument is given
@@ -219,12 +229,15 @@
   (apply comp (reverse fs)))
 
 (defn raptial
-  "Like `partial` except it will insert the argument accepted by the returned function between first
-  and second elements of `args` (as opposed to [[partial]] which adds the argument after those given
-  to it).
+  "Like `partial` except it will insert the argument accepted by the returned function to the *front*
+  of `args` (as opposed to [[partial]] which adds the argument *after* those given to it).
 
-  Example:
   ```
+        user> (let [f (c/raptial assoc :a 1)
+                     g #(assoc % :a 1)
+                     m {:b 2}]
+                 (= (f m) (g m)))
+        true
         user> {:ex1 ((raptial assoc :x 2) {:a 1})
                :ex2 (->> [{:a 1} {:v -1}]
                          (map (raptial assoc :x 2)))}
@@ -234,13 +247,13 @@
   ```
   `io.simplect.compose.notation` defines the short-hand notation `π` for `raptial` and `Π` for
   `clojure.core/partial`."
-  [f & args1]
+  [f & args]
   (fn [& args2]
     (if-let [fst (first args2)]
-      (apply f (cons fst (concat args1 (rest args2))))
-      (apply f args1))))
+      (apply f (cons fst (concat args (rest args2))))
+      (apply f args))))
 
-(sdefn reorder (s/cat :indices (s/coll-of (s/and int? (complement neg?)) :kind sequential?) :f fn?)
+(defn reorder
   "Returns a function which calls `f` with arguments reordered according to `v` which must be a
   sequential collection of integers all less than the number of arguments.
 
@@ -291,4 +304,43 @@
   `(cats/curry ~@args))
 
 ;; Add fmap from clojure.algo.generic.functor
-(fref fmap clojure.algo.generic.functor/fmap)
+(u/fref fmap clojure.algo.generic.functor/fmap)
+
+(defn call-if
+  "Takes a single argument.  If applying `pred` to the argument yields a truthy value returns the
+  result of applying `f` to the argument, otherwise returns the argument itself."
+  [pred f]
+  #(if (pred %) (f %) %))
+
+;;; ----------------------------------------------------------------------------------------------------
+;;; NOTATION - DEFINITIONS BELOW MERELY INTRODUCES ALTERNATIVE SHORT NAMES (NO NEW FUNCTIONALITY)
+;;; ----------------------------------------------------------------------------------------------------
+
+(u/fref π	core/partial)
+(u/fref pt	core/partial)
+
+(u/fref Π	raptial)
+(u/fref tp	raptial)
+
+(u/fref γ	core/comp)
+
+(u/fref Γ	rcomp)
+(u/fref rc	rcomp)
+
+(u/fref μ	core/map)
+(u/fref ρ	core/reduce)
+
+(defmacro χ
+  "Abbreviated form of [[io.simplect.compose/curry]]."
+  [& args]
+  `(io.simplect.compose/curry ~@args))
+(u/merge-meta #'χ (u/var-arglist-and-doc #'io.simplect.compose/curry))
+(alter-meta! #'χ (Π update-in [:doc] (π str "Abbreviated form of [[io.simplect.compose/curry]].\n\n")))
+
+(defmacro λ
+  "Same as [[clojure.core/fn]]."
+  [& args]
+  `(fn ~@args))
+(u/merge-meta #'λ (u/var-arglist-and-doc #'fn))
+(alter-meta! #'λ (Π update-in [:doc] (π str "Abbreviated form of [[clojure.core/fn]].\n\n")))
+

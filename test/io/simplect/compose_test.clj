@@ -1,6 +1,7 @@
 (ns io.simplect.compose-test
   (:require
    [clojure.spec.alpha			:as s]
+   [clojure.spec.test.alpha		:as t]
    [clojure.test				:refer [is deftest]]
    ,,
    [io.simplect.compose			:as c	:refer [>->> >>->]]))
@@ -8,17 +9,19 @@
 (c/def- my-def 99)
 
 (deftest test-def-
-  (= true (-> #'my-def meta :private)))
+  (is (= true (-> #'my-def meta :private))))
 
 (c/fdef myfn-int
   int?
   (fn [v]
     (inc v)))
+(t/instrument `myfn-int)
 
 (c/fdef- myfn-int2
   (s/cat :int int? :int int?)
   (fn [a b]
     (+ a b)))
+(t/instrument `myfn-int2)
 
 (s/def ::int int?)
 
@@ -26,6 +29,7 @@
   (s/cat :int ::int)
   (fn [a]
     (+ a 9)))
+(t/instrument `myfn-int3)
 
 (deftest test-fdef
   (is (= 10	(try (myfn-int 9) (catch Exception _ :err))))
@@ -39,7 +43,10 @@
   (is (= nil	(-> #'myfn-int meta :private))))
 
 (c/fdef- myfn-internal-int int? (fn [v] (inc v)))
+(t/instrument `myfn-internal-int)
+
 (c/fdef- myfn-internal-int2 (s/cat :int int? :int int?) (fn [a b] (+ a b)))
+(t/instrument `myfn-internal-int2)
 
 (deftest test-fdef-
   (is (= 10 (try (myfn-internal-int 9) (catch Exception _ :error))))
@@ -54,11 +61,13 @@
   (s/cat :int int?)
   [v]
   (+ v 2))
+(t/instrument `add-to-int)
 
 (c/sdefn add-to-int2
   int?
   [v]
   (+ v 2))
+(t/instrument `add-to-int2)
 
 (deftest test-sdefn
   (is (= (try (add-to-int 4) (catch Exception _ :error)) 6))
@@ -71,11 +80,13 @@
   (s/cat :int int?)
   [v]
   (+ v 2))
+(t/instrument `add-to-int-private)
 
 (c/sdefn- add-to-int-private2
   int?
   [v]
   (+ v 2))
+(t/instrument `add-to-int-private2)
 
 (deftest test-sdefn
   (is (= (try (add-to-int-private 4) (catch Exception _ :error)) 6))
