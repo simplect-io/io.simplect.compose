@@ -12,10 +12,23 @@
    [clojure.algo.generic.functor		:as functor]
    [clojure.core				:as core]
    [clojure.spec.alpha				:as s]
-   [clojure.spec.test.alpha			:as t]
-   ,,
-   [io.simplect.compose.util			:as u]
    ))
+
+(defn- var-arglist-and-doc
+  [fvar]
+  (select-keys (meta fvar) [:arglists :doc]))
+
+(defn- merge-meta
+  [target-var m]
+  (alter-meta! target-var #(merge % m)))
+
+(defmacro fref
+  [nm fname]
+  `(let [m# (var-arglist-and-doc (var ~fname))]
+     (def ~nm ~fname)
+     (merge-meta (var ~nm) (update-in m# [:doc] #(str "Notation for [[" '~fname "]].\n\n" %)))
+     '~nm))
+(alter-meta! #'fref #(assoc % :private true))
 
 (defn- build-sym
   [nm]
@@ -219,12 +232,15 @@
                  (cons lst (butlast args))
                  '())))))
 
+(defmacro invoke
+  "Call function `f`."
+  [f & args]
+  `(.invoke ^clojure.lang.IFn ~f ~@args))
+
 (defn rcomp
   "Compose `fs` in order.  Like [[clojure.core/comp]] except applies `fs` in the order they appear
-  (reverse order relative to [[comp]]).
-
-  `io.simplect.compose.notation` defines the short-hand notation [[Γ]] for [[rcomp]] and
-  [[γ]] for [[clojure.core/comp]]."
+  (reverse order relative to [[comp]]). `io.simplect.compose` defines the short-hand notation [[Γ]]
+  for [[rcomp]] and [[γ]] for [[clojure.core/comp]]."
   [& fs]
   (apply comp (reverse fs)))
 
@@ -245,7 +261,7 @@
          :ex2 ({:a 1, :x 2} {:v -1, :x 2})}
         user>
   ```
-  `io.simplect.compose.notation` defines the short-hand notation `π` for `raptial` and `Π` for
+  `io.simplect.compose` defines the short-hand notation `π` for `raptial` and `Π` for
   `clojure.core/partial`."
   [f & args]
   (fn [& args2]
@@ -299,12 +315,12 @@
       ((((c+) 1) 2) 3)
       ;; => 6
 
-  `io.simplect.compose.notation` defines the short-hand notation `Χ` for [[curry]]."
+  `io.simplect.compose` defines the short-hand notation `Χ` for [[curry]]."
   [& args]
   `(cats/curry ~@args))
 
 ;; Add fmap from clojure.algo.generic.functor
-(u/fref fmap clojure.algo.generic.functor/fmap)
+(fref fmap clojure.algo.generic.functor/fmap)
 
 (defn call-if
   "Takes a single argument.  If applying `pred` to the argument yields a truthy value returns the
@@ -316,31 +332,35 @@
 ;;; NOTATION - DEFINITIONS BELOW MERELY INTRODUCES ALTERNATIVE SHORT NAMES (NO NEW FUNCTIONALITY)
 ;;; ----------------------------------------------------------------------------------------------------
 
-(u/fref π	core/partial)
-(u/fref pt	core/partial)
+(fref π	core/partial)
+(fref p	core/partial)
 
-(u/fref Π	raptial)
-(u/fref tp	raptial)
+(fref Π	raptial)
+(fref P	raptial)
 
-(u/fref γ	core/comp)
+(fref γ	core/comp)
+(fref c	core/comp)
 
-(u/fref Γ	rcomp)
-(u/fref rc	rcomp)
+(fref Γ	rcomp)
+(fref C	rcomp)
 
-(u/fref μ	core/map)
-(u/fref ρ	core/reduce)
+(fref μ	core/map)
+(fref m	core/map)
+
+(fref ρ	core/reduce)
+(fref r	core/reduce)
 
 (defmacro χ
   "Abbreviated form of [[io.simplect.compose/curry]]."
   [& args]
   `(io.simplect.compose/curry ~@args))
-(u/merge-meta #'χ (u/var-arglist-and-doc #'io.simplect.compose/curry))
+(merge-meta #'χ (var-arglist-and-doc #'io.simplect.compose/curry))
 (alter-meta! #'χ (Π update-in [:doc] (π str "Abbreviated form of [[io.simplect.compose/curry]].\n\n")))
 
 (defmacro λ
   "Same as [[clojure.core/fn]]."
   [& args]
   `(fn ~@args))
-(u/merge-meta #'λ (u/var-arglist-and-doc #'fn))
+(merge-meta #'λ (var-arglist-and-doc #'fn))
 (alter-meta! #'λ (Π update-in [:doc] (π str "Abbreviated form of [[clojure.core/fn]].\n\n")))
 
