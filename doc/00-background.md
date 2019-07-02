@@ -22,7 +22,7 @@ user> (-> 50
 ```
 
 which permits you to build more complex expressions while maintaining reasonable clarity of what is
-going on.
+going on.  That is very nice.
 
 However, there are disadvantages to using this style too much: Big expressions are not very flexible
 because they leave the functionality of your program nested inside expressions where they cannot be
