@@ -364,3 +364,13 @@
 (merge-meta #'λ (var-arglist-and-doc #'fn))
 (alter-meta! #'λ (Π update-in [:doc] (π str "Abbreviated form of [[clojure.core/fn]].\n\n")))
 
+(comment
+  (defn- guard
+    [pred then else]
+    #(if (pred %) (then %) (else %)))
+  (defn guard-when
+    [pred then]
+    (guard pred then identity))
+  (defn guard-when-not
+    [pred then]
+    (guard-when (complement pred) then)))
